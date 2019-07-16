@@ -1,2 +1,0 @@
-# ANMC
-Created with CodeSandbox
