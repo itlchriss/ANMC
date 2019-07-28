@@ -1,5 +1,8 @@
 export default function Diver() {
-  this.name = "";
+  this.efname = "";
+  this.elname = "";
+  this.cfname = "";
+  this.clname = "";
   this.age = "";
   this.sex = "";
 }
