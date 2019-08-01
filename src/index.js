@@ -13,6 +13,9 @@ import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import Done from "@material-ui/icons/Done";
 
+//structure
+import Diver from "./structures/Diver";
+
 //components
 import DiverForm from "./components/DiverForm";
 import MatchAssembly from "./components/MatchAssembly";
@@ -20,57 +23,76 @@ import MatchAssembly from "./components/MatchAssembly";
 const steps = [
   "Match Assembly Confirmation",
   "Diver Information",
-  "Match Listing",
+  "Match Setting",
   "Match Miscellaneous",
   "Review",
   "Completed"
 ];
 
-class StepContent extends React.Component {
-  render() {
-    switch (this.props.step) {
-      case 0:
-        return <MatchAssembly />;
-      case 1:
-        return <DiverForm />;
-      default:
-        return <div />;
-    }
+const getStepContent = (
+  step,
+  { handleAddDiver, handleRemoveDiver, handleDiverOnChange },
+  { divers }
+) => {
+  console.log("called getStepContent: state => " + divers);
+  switch (step) {
+    case 0:
+      return <MatchAssembly />;
+    case 1:
+      return (
+        <DiverForm
+          handleAddDiver={handleAddDiver}
+          handleRemoveDiver={handleRemoveDiver}
+          handleDiverOnChange={handleDiverOnChange}
+          divers={divers}
+        />
+      );
+    default:
+      return <div />;
   }
-}
+};
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { step: 1 };
-    this.handleStepNext = this.handleStepNext.bind(this);
-    this.handleStepBack = this.handleStepBack.bind(this);
-  }
-  handleStepNext() {
-    let step = this.state.step;
-    if (step < steps.length - 1) {
-      this.setState({ step: ++step });
-    }
-  }
-  handleStepBack() {
-    let step = this.state.step;
-    if (step > 0) {
-      this.setState({ step: --step });
-    }
-  }
-  render() {
-    return (
-      <React.Fragment>
-        <CssBaseline />
-        <AppBar position="relative" color="default">
-          <Toolbar>
-            <Typography variant={"h4"} noWrap>
-              Registration Form
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Paper height="100%" minHeight={"1000px"}>
-          <Stepper activeStep={this.state.step}>
+const App = () => {
+  let [state, setState] = React.useState({
+    activeStep: 1,
+    divers: [new Diver()]
+  });
+  const handleAddDiver = () => {
+    console.log("called parent");
+    setState({ ...state, divers: state.divers.push(new Diver()) });
+    console.log("finish calling parent");
+  };
+  const handleRemoveDiver = index => {
+    setState({ ...state, divers: state.divers.splice(index) });
+  };
+  const handleDiverOnChange = (id, value, index) => {
+    let tmp = state.divers;
+    tmp[index][id] = value;
+    setState({ ...state, divers: tmp });
+  };
+  const handleStepNext = () => {
+    let step = state.activeStep;
+    step = step < steps.length - 1 ? ++step : steps.length - 1;
+    setState({ ...state, activeStep: step });
+  };
+  const handleStepBack = () => {
+    let step = state.activeStep;
+    step = step > 0 ? --step : 0;
+    setState({ ...state, activeStep: step });
+  };
+  return (
+    <React.Fragment>
+      <CssBaseline />
+      <AppBar position="relative" color="default">
+        <Toolbar>
+          <Typography variant={"h4"} noWrap>
+            Registration Form
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <div style={{ padding: 20 }}>
+        <Paper height="100%" minheight={"1000px"}>
+          <Stepper activeStep={state.activeStep}>
             {steps.map(label => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -85,10 +107,10 @@ class App extends React.Component {
                 direction={"row"}
                 spacing={2}
               >
-                <Grid item xs={1}>
-                  {this.state.step !== 0 && (
+                <Grid item xs={2}>
+                  {state.activeStep !== 0 && (
                     <Button
-                      onClick={this.handleStepBack}
+                      onClick={handleStepBack}
                       color={"primary"}
                       variant={"contained"}
                     >
@@ -99,17 +121,17 @@ class App extends React.Component {
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant={"subtitle1"} noWrap align={"center"}>
-                    {steps[this.state.step]}
+                    {steps[state.activeStep]}
                   </Typography>
                 </Grid>
-                <Grid item xs={1}>
+                <Grid item xs={2}>
                   <Button
-                    onClick={this.handleStepNext}
+                    onClick={handleStepNext}
                     color={"primary"}
                     variant={"contained"}
                   >
-                    {this.state.step === steps.length - 1 ? "Submit" : "Next"}
-                    {this.state.step === steps.length - 1 ? (
+                    {state.activeStep === steps.length - 1 ? "Submit" : "Next"}
+                    {state.activeStep === steps.length - 1 ? (
                       <Done />
                     ) : (
                       <KeyboardArrowRight />
@@ -119,12 +141,20 @@ class App extends React.Component {
               </Grid>
             </Toolbar>
           </AppBar>
-          <StepContent step={this.state.step} />
+          {getStepContent(
+            state.activeStep,
+            {
+              handleAddDiver,
+              handleRemoveDiver,
+              handleDiverOnChange
+            },
+            state
+          )}
         </Paper>
-      </React.Fragment>
-    );
-  }
-}
+      </div>
+    </React.Fragment>
+  );
+};
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(<App />, rootElement);
